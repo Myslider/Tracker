@@ -11,13 +11,9 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
-/**
- * Created by Monisia on 12/10/2017.
- */
-
 public class GPSTracker implements LocationListener {
-    private static final float MIN_DISTANCE_CHANGE_FOR_UPDATES = 0; // 10 meters
-    private static final long MIN_TIME_BW_UPDATES = 0; // 1 minute
+    private static final float MIN_DISTANCE_CHANGE_FOR_UPDATES = 0;
+    private static final long MIN_TIME_BW_UPDATES = 0;
     static final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 1;
 
     private final Context mContext;
@@ -35,20 +31,17 @@ public class GPSTracker implements LocationListener {
         this.mContext = context;
         this.mActivity = activity;
         this.getLocation();
-        if (ContextCompat.checkSelfPermission(
-                this.mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this.mActivity,
-                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
-        }
-        locationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-
     }
 
-    public Location getLocation() {
+    public void getLocation() {
         try {
+            if (ContextCompat.checkSelfPermission(
+                    this.mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this.mActivity,
+                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
+            }
 
-            //locationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
+            locationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
             isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
             isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
@@ -56,7 +49,8 @@ public class GPSTracker implements LocationListener {
                 location.setLatitude(0);
                 location.setLongitude(0);
                 // no network provider is enabled
-            } else {
+            }
+            else {
                 this.canGetLocation = true;
                 if (isGPSEnabled) {
                     this.getLastLocation(LocationManager.GPS_PROVIDER);
@@ -64,22 +58,18 @@ public class GPSTracker implements LocationListener {
                     this.getLastLocation(LocationManager.NETWORK_PROVIDER);
                 }
             }
-        } catch (Exception e) {
-            //do nothing
-        }
 
-        return location;
+            locationManager.requestLocationUpdates(this.provider, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+        } catch (Exception e) { }
     }
 
     private void getLastLocation(String provider) {
-
         this.provider = provider;
         if (ContextCompat.checkSelfPermission(
                 this.mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this.mActivity,
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
         }
-
 
         if (locationManager != null) {
             location = locationManager.getLastKnownLocation(provider);

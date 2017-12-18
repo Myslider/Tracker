@@ -25,7 +25,6 @@ public class LocationSensor implements SensorEventListener {
     public GPSTracker mGPS;
     private Location location;
 
-
     public LocationSensor(Context context, Activity activity) {
         mGPS = new GPSTracker(context, activity);
         mContext = context;
@@ -33,7 +32,6 @@ public class LocationSensor implements SensorEventListener {
         sensorManager = (SensorManager) context.getSystemService(SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
-        //sensorManager.registerListener(this, sensor, 12);
     }
 
     @Override
@@ -45,14 +43,11 @@ public class LocationSensor implements SensorEventListener {
             ((CoordinatesActivity) mContext).setLocation("i am", "here");
             return;
         }
-        //if (mGPS.CanGetLocation() && CoordinatesActivity.isTracking) {
-
-            location = mGPS.getLocation();
-            String s = String.valueOf(mGPS.getLatitude());
-            String d = String.valueOf(mGPS.getLongitude());
-            ((CoordinatesActivity) mContext).setLocation(s, d);
-        //} else
-        //    ((CoordinatesActivity) mContext).setLocation("foo", "foo");
+        if (mGPS.CanGetLocation() && CoordinatesActivity.isTracking) {
+            mGPS.getLocation();
+            ((CoordinatesActivity) mContext).setLocation(String.valueOf(mGPS.getLatitude()), String.valueOf(mGPS.getLongitude()));
+        } else
+            ((CoordinatesActivity) mContext).setLocation("foo", "foo");
     }
 
     @Override
