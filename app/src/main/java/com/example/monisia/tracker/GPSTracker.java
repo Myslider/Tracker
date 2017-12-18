@@ -60,9 +60,7 @@ public class GPSTracker implements LocationListener {
             }
 
             locationManager.requestLocationUpdates(this.provider, MIN_TIME_BW_UPDATES, MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-        } catch (Exception e) {
-            //do nothing
-        }
+        } catch (Exception e) { }
     }
 
     private void getLastLocation(String provider) {
