@@ -83,11 +83,10 @@ public class CoordinatesActivity extends Activity {
             @Override
             public void run() {
                 try  {
-                    String url = "http://192.168.1.10:8080/coordinates/child/1";   //"https://ajax.googleapis.com/ajax/" + "services/search/web?v=1.0&q={query}";
+                    String url = "http://192.168.1.10:8080/coordinates/child/1";
                     RestTemplate restTemplate = new RestTemplate();
                     restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
                     result = restTemplate.getForObject(url, String.class);
-                    String x = result;
                 } catch (Exception e) {
                     result = "failed";
                     e.printStackTrace();
