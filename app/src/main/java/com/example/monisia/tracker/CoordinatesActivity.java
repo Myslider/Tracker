@@ -10,6 +10,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class CoordinatesActivity extends Activity {
 
@@ -39,8 +40,8 @@ public class CoordinatesActivity extends Activity {
         longitude.setText("");
         latitude.setText(lat);
         longitude.setText(lon);
-        this.sendCoordinates(lon, lat);
-        //this.getCoordinates();
+        //this.sendCoordinates(lon, lat);
+        this.getCoordinates();
     }
 
     protected void onResume()
@@ -83,7 +84,7 @@ public class CoordinatesActivity extends Activity {
                     String url = "http://192.168.1.10:8080/coordinates/child/1";
                     RestTemplate restTemplate = new RestTemplate();
                     restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
-                    result = restTemplate.getForObject(url, String.class);
+                    CoordinateDto []  coordinateDtos = restTemplate.getForObject(url, CoordinateDto[].class);
                 } catch (Exception e) {
                     result = "failed";
                     e.printStackTrace();
@@ -96,7 +97,7 @@ public class CoordinatesActivity extends Activity {
 
     private void sendCoordinates(final String longitude, final String latitude)
     {
-        final Thread thread = new Thread(new Runnable() {
+        Thread thread = new Thread(new Runnable() {
         @Override
         public void run() {
         String url = "http://192.168.1.10:8080/coordinates/save";
