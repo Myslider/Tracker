@@ -1,18 +1,15 @@
 package com.example.monisia.tracker;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.os.Build;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.UUID;
+import java.util.Calendar;
+import java.util.Date;
 
 public class CoordinatesActivity extends Activity {
 
@@ -21,6 +18,7 @@ public class CoordinatesActivity extends Activity {
     //ImageView trackingImage;
     LocationSensor lSensor;
     String result;
+    CoordinateDto res;
     public static boolean isTracking = true;
 
 
@@ -41,6 +39,8 @@ public class CoordinatesActivity extends Activity {
         longitude.setText("");
         latitude.setText(lat);
         longitude.setText(lon);
+        this.sendCoordinates(lon, lat);
+        //this.getCoordinates();
     }
 
     protected void onResume()
@@ -77,9 +77,6 @@ public class CoordinatesActivity extends Activity {
     private void getCoordinates()
     {
         Thread thread = new Thread(new Runnable() {
-            // wylaczyc firewall, sprawdzic antywirus czy nie blokuje, byc polaczonym do tego samego wifi co telefon, odpowiedni adres IP wpisac
-            // mozna sprawdzic czy telefon jest w stanie wejsc na ta stronke, jesli tak to raczej zadziala
-            // u mnie "Zapora osobista" w eset musi byc wylaczona
             @Override
             public void run() {
                 try  {
@@ -93,6 +90,38 @@ public class CoordinatesActivity extends Activity {
                 }
             }
         });
+
+        thread.start();
+    }
+
+    private void sendCoordinates(final String longitude, final String latitude)
+    {
+        final Thread thread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+        String url = "http://192.168.1.10:8080/coordinates/save";
+        RestTemplate restTemplate = new RestTemplate();
+        CoordinateDto postCor = new CoordinateDto();
+        postCor.longitude = longitude;
+        postCor.latitude = latitude;
+        Calendar date = Calendar.getInstance();
+        postCor.date = String.format("%d-%d-%d", date.get(Calendar.YEAR), date.get(Calendar.MONTH) +1, date.get(Calendar.DAY_OF_MONTH));
+        if (date.get(Calendar.HOUR_OF_DAY)<10)
+        postCor.time = String.format("0%d:%d",date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE));
+        else
+            postCor.time = String.format("%d:%d",date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE));
+        postCor.childFirstName ="Pawel";
+        postCor.childLastName ="Kowalski";
+        postCor.childId ="1";
+
+        try {
+            restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
+            restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
+            res = restTemplate.postForObject(url, postCor, CoordinateDto.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        }});
 
         thread.start();
     }
