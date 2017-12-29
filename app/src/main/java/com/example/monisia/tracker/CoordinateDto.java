@@ -1,5 +1,6 @@
 package com.example.monisia.tracker;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -7,6 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 
 public class CoordinateDto {
+    @JsonIgnore
+    public String id;
+
     @JsonProperty("length")
     public String longitude;
 
