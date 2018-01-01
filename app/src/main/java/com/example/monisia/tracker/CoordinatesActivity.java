@@ -2,6 +2,8 @@ package com.example.monisia.tracker;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -26,6 +28,7 @@ public class CoordinatesActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_coordinates);
 
         lSensor = new LocationSensor(this, this);
@@ -42,6 +45,19 @@ public class CoordinatesActivity extends Activity {
         longitude.setText(lon);
         //this.sendCoordinates(lon, lat);
         this.getCoordinates();
+    }
+
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        }
     }
 
     protected void onResume()
@@ -123,6 +139,26 @@ public class CoordinatesActivity extends Activity {
             e.printStackTrace();
         }
         }});
+
+        thread.start();
+    }
+
+    public void getChildren()
+    {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try  {
+                    String url = "http://192.168.1.10:8080/parent/1";
+                    RestTemplate restTemplate = new RestTemplate();
+                    restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
+                    ChildDto []  childDto = restTemplate.getForObject(url, ChildDto[].class);
+                } catch (Exception e) {
+                    result = "failed";
+                    e.printStackTrace();
+                }
+            }
+        });
 
         thread.start();
     }
