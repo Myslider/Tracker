@@ -1,17 +1,40 @@
 package com.example.monisia.tracker;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
 
-public class MainActivity extends AppCompatActivity {
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.web.client.RestTemplate;
 
+public class MainActivity extends AppCompatActivity {
+    Context context;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        context = this;
+        // try login with saved credentials
+        final SharedPreferences pref = getApplicationContext().getSharedPreferences("TrackerPref", 0);
+        if (pref.getString("username", "") != "")
+        {
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if (tryLogin(pref.getString("username", ""), pref.getString("password", "")))
+                    {
+                        Intent intent = new Intent(context, CoordinatesActivity.class);
+                        startActivity(intent);
+                    }
+                }
+            });
+
+            thread.start();
+        }
         setContentView(R.layout.activity_main);
     }
 
@@ -54,5 +77,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause()
     {
         super.onPause();
+    }
+
+    private Boolean tryLogin(final String username, final String password)
+    {
+        try {
+            String url = "http://192.168.1.10:8080/login/";
+            RestTemplate restTemplate = new RestTemplate();
+            LoginDto loginDto = new LoginDto();
+            loginDto.Username = username;
+            loginDto.Password = password;
+            restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
+            return restTemplate.postForObject(url, loginDto, Boolean.class);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

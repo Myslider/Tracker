@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -61,7 +62,8 @@ public class RegisterActivity extends Activity implements LoaderCallbacks<Cursor
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-    Context context;
+    private Context context;
+    private SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +71,8 @@ public class RegisterActivity extends Activity implements LoaderCallbacks<Cursor
         setContentView(R.layout.activity_register);
         // Set up the login form.
         context = this;
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("TrackerPref", 0);
+        editor = pref.edit();
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
 
@@ -339,6 +343,9 @@ public class RegisterActivity extends Activity implements LoaderCallbacks<Cursor
             //showProgress(false);
 
             if (success) {
+                editor.putString("username", mEmail);
+                editor.putString("password", mPassword);
+                editor.commit();
                 Intent intent = new Intent(context, CoordinatesActivity.class);
                 startActivity(intent);
             } else {
