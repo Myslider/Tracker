@@ -32,7 +32,10 @@
             android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity
             android:name=".RegisterActivity"
-            android:label="@string/title_activity_register"></activity>
+            android:label="@string/title_activity_register" />
+        <activity
+            android:name=".ChildViewActivity"
+            android:label="@string/title_activity_child_view"></activity>
     </application>
 
 </manifest>

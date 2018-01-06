@@ -1,9 +1,11 @@
 package com.example.monisia.tracker;
 
 import android.app.Activity;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -11,14 +13,12 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
 
 public class CoordinatesActivity extends Activity {
 
     TextView latitude;
     TextView longitude;
-    //ImageView trackingImage;
+    ImageView trackingImage;
     LocationSensor lSensor;
     String result;
     CoordinateDto res;
@@ -33,7 +33,7 @@ public class CoordinatesActivity extends Activity {
 
         lSensor = new LocationSensor(this, this);
 
-        //trackingImage = findViewById(R.id.imageView);
+        trackingImage = findViewById(R.id.imageView2);
         latitude = findViewById(R.id.textView6);
         longitude = findViewById(R.id.textView4);
     }
@@ -43,8 +43,14 @@ public class CoordinatesActivity extends Activity {
         longitude.setText("");
         latitude.setText(lat);
         longitude.setText(lon);
-        //this.sendCoordinates(lon, lat);
-        this.getCoordinates();
+        if(lat == "404")
+        {
+            isTracking=false;
+        }
+        this.changeTrackingImage();
+
+        this.sendCoordinates(lon, lat);
+        //this.getCoordinates();
     }
 
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -63,32 +69,13 @@ public class CoordinatesActivity extends Activity {
     protected void onResume()
     {
         super.onResume();
-        //if (isTracking)
-        //{
-            //Change tracking image, if to work on older versions
-            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                trackingImage.setImageDrawable(getResources().getDrawable(R.mipmap.is_tracking_launcher_round, getApplicationContext().getTheme()));
-            } else {
-                trackingImage.setImageDrawable(getResources().getDrawable(R.mipmap.is_tracking_launcher_round));
-            }*/
-            //lSensor.mGPS.getLocation();
-
-        //}
-        //else
-        //{
-            //Change tracking image, if to work on older versions
-            /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                trackingImage.setImageDrawable(getResources().getDrawable(R.mipmap.not_tracking_launcher_round, getApplicationContext().getTheme()));
-            } else {
-                trackingImage.setImageDrawable(getResources().getDrawable(R.mipmap.not_tracking_launcher_round));
-            }*/
-            //lSensor.mGPS.stopUsingGPS();
-        //}
+        this.changeTrackingImage();
     }
 
     protected void onPause()
     {
         super.onPause();
+        this.changeTrackingImage();
     }
 
     private void getCoordinates()
@@ -122,11 +109,13 @@ public class CoordinatesActivity extends Activity {
         postCor.longitude = longitude;
         postCor.latitude = latitude;
         Calendar date = Calendar.getInstance();
-        postCor.date = String.format("%d-%d-%d", date.get(Calendar.YEAR), date.get(Calendar.MONTH) +1, date.get(Calendar.DAY_OF_MONTH));
-        if (date.get(Calendar.HOUR_OF_DAY)<10)
-        postCor.time = String.format("0%d:%d",date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE));
-        else
-            postCor.time = String.format("%d:%d",date.get(Calendar.HOUR_OF_DAY), date.get(Calendar.MINUTE));
+
+        postCor.date = String.format("%d-%s%d-%s%d",
+                date.get(Calendar.YEAR), date.get(Calendar.MONTH) +1<10 ? 0 : "", date.get(Calendar.MONTH) +1,
+                date.get(Calendar.DAY_OF_MONTH)<10 ? "0" : "", date.get(Calendar.DAY_OF_MONTH));
+        postCor.time = String.format("%s%d:%s%d",
+                date.get(Calendar.HOUR_OF_DAY) <10 ? "0" : "", date.get(Calendar.HOUR_OF_DAY),
+                date.get(Calendar.MINUTE) <10 ? "0" : "", date.get(Calendar.MINUTE));
         postCor.childFirstName ="Pawel";
         postCor.childLastName ="Kowalski";
         postCor.childId ="1";
@@ -161,5 +150,27 @@ public class CoordinatesActivity extends Activity {
         });
 
         thread.start();
+    }
+
+    private void changeTrackingImage()
+    {
+        if (isTracking)
+        {
+            //Change tracking image, if to work on older versions
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                trackingImage.setImageDrawable(getResources().getDrawable(R.mipmap.istracking_image, getApplicationContext().getTheme()));
+            } else {
+                trackingImage.setImageDrawable(getResources().getDrawable(R.mipmap.istracking_image));
+            }
+        }
+        else
+        {
+            //Change tracking image, if to work on older versions
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                trackingImage.setImageDrawable(getResources().getDrawable(R.mipmap.nottracking_image, getApplicationContext().getTheme()));
+            } else {
+                trackingImage.setImageDrawable(getResources().getDrawable(R.mipmap.nottracking_image));
+            }
+        }
     }
 }

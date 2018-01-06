@@ -22,4 +22,5 @@
         <item>Parent</item>
     </string-array>
     <string name="title_activity_register">Register</string>
+    <string name="title_activity_child_view">ChildViewActivity</string>
 </resources>

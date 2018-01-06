@@ -13,7 +13,7 @@ import android.support.v4.content.ContextCompat;
 
 public class GPSTracker implements LocationListener {
     private static final float MIN_DISTANCE_CHANGE_FOR_UPDATES = 0;
-    private static final long MIN_TIME_BW_UPDATES = 0;
+    private static final long MIN_TIME_BW_UPDATES = 1;
     static final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 1;
 
     private final Context mContext;
@@ -48,10 +48,13 @@ public class GPSTracker implements LocationListener {
             if (isGPSEnabled == false && isNetworkEnabled == false) {
                 location.setLatitude(0);
                 location.setLongitude(0);
+                this.canGetLocation = false;
+                CoordinatesActivity.isTracking = this.canGetLocation;
                 // no network provider is enabled
             }
             else {
                 this.canGetLocation = true;
+                CoordinatesActivity.isTracking = this.canGetLocation;
                 if (isGPSEnabled) {
                     this.getLastLocation(LocationManager.GPS_PROVIDER);
                 } else if (isNetworkEnabled) {
@@ -73,6 +76,11 @@ public class GPSTracker implements LocationListener {
 
         if (locationManager != null) {
             location = locationManager.getLastKnownLocation(provider);
+            //if gps doesn't work, try with network
+            if(location == null && provider == "gps")
+            {
+                this.getLastLocation(LocationManager.NETWORK_PROVIDER);
+            }
         }
     }
 

@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void goToLocationView(View view)
     {
-        Intent intent = new Intent(this, CoordinatesActivity.class);
+        Intent intent = new Intent(this, ChildViewActivity.class);
         startActivity(intent);
     }
 
