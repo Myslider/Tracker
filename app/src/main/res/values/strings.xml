@@ -14,7 +14,6 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
-    <string name="title_activity_login2">Sign in</string>
 
 
     <string-array name="mode_array">
@@ -23,4 +22,5 @@
     </string-array>
     <string name="title_activity_register">Register</string>
     <string name="title_activity_child_view">ChildViewActivity</string>
+    <string name="title_activity_map_osm">MapOsmActivity</string>
 </resources>
