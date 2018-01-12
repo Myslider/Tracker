@@ -21,6 +21,9 @@ allprojects {
         google()
         jcenter()
         maven { url "https://repo.spring.io/release" }
+        flatDir {
+            dirs 'libs'
+        }
     }
 }
 

@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void goToLocationView(View view)
     {
-        Intent intent = new Intent(this, ChildViewActivity.class);
+        Intent intent = new Intent(this, MapOsmActivity.class);
         startActivity(intent);
     }
 
@@ -55,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, RegisterActivity.class);
         startActivity(intent);
     }
+
+
 
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
