@@ -356,7 +356,7 @@ public class RegisterActivity extends Activity implements LoaderCallbacks<Cursor
                     keyGenDto.key = UUID.randomUUID().toString().substring(0, 6);
                     Long res = restTemplate.postForObject(keyurl, keyGenDto, long.class);
                     editor.putString("keygen", keyGenDto.key);
-                    editor.putLong("childId", res);
+                    editor.putLong("childId", result);
                 }
                 editor.commit();
 

@@ -15,5 +15,5 @@ public class ParentDto {
     private String firstName;
     private String lastName;
     private List<ChildDto> childs;
-    private LoginDto user;
+    //private LoginDto user;
 }

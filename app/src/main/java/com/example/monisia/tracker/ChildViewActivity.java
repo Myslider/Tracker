@@ -17,7 +17,6 @@ import java.util.Calendar;
 
 public class ChildViewActivity extends Activity {
     LocationSensor lSensor;
-    String result;
     CoordinateDto res;
     public static boolean isTracking = true;
     public TextView textView;
@@ -95,7 +94,7 @@ public class ChildViewActivity extends Activity {
     }
 
     public void setLocation(String lat, String lon) {
-        if(lat == "404" || lat == "foo" || lat== "here")
+        if(lat == "404" || lat == "foo" || lat== "here" || lon=="here")
         {
             isTracking=false;
         }
@@ -118,9 +117,7 @@ public class ChildViewActivity extends Activity {
                 Calendar date = Calendar.getInstance();
                 postCor.date = getDate(date);
                 postCor.time = getTime(date);
-                postCor.childFirstName =firstName;
-                postCor.childLastName =lastName;
-                postCor.childId =String.valueOf(childId);
+                postCor.childId = String.valueOf(childId);
 
                 try {
                     restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
@@ -146,45 +143,4 @@ public class ChildViewActivity extends Activity {
                 date.get(Calendar.HOUR_OF_DAY) <10 ? "0" : "", date.get(Calendar.HOUR_OF_DAY),
                 date.get(Calendar.MINUTE) <10 ? "0" : "", date.get(Calendar.MINUTE));
     }
-
-    private void getCoordinates()
-    {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try  {
-                    String url = getString(R.string.DBUrl) + "coordinates/child/1";
-                    RestTemplate restTemplate = new RestTemplate();
-                    restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
-                    CoordinateDto []  coordinateDtos = restTemplate.getForObject(url, CoordinateDto[].class);
-                } catch (Exception e) {
-                    result = "failed";
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        thread.start();
-    }
-
-    public void getChildren()
-    {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try  {
-                    String url = getString(R.string.DBUrl) + "parent/1";
-                    RestTemplate restTemplate = new RestTemplate();
-                    restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
-                    ChildDto []  childDto = restTemplate.getForObject(url, ChildDto[].class);
-                } catch (Exception e) {
-                    result = "failed";
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        thread.start();
-    }
-
 }

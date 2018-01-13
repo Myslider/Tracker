@@ -21,9 +21,5 @@ public class CoordinateDto {
 
     public String time;
 
-    public String childFirstName;
-
-    public String childLastName;
-
     public String childId;
 }

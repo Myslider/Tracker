@@ -339,6 +339,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
                 result = restTemplate.postForObject(url, loginDto, LoginDto.class);
                 isParent = result.IsParent;
+                editor.putLong("Id", result.id);
             } catch (Exception e) {
                 return false;
             }
@@ -356,6 +357,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 editor.putString("username", mEmail);
                 editor.putString("password", mPassword);
                 editor.putBoolean("isParent", isParent);
+
                 editor.commit();
                 if (isParent)
                 {

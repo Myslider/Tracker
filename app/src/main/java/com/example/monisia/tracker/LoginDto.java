@@ -16,4 +16,5 @@ public class LoginDto {
     @JsonProperty("isParent")
     public Boolean IsParent;
 
+    public Long id;
 }
