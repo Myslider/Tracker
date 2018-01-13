@@ -12,8 +12,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
 public class GPSTracker implements LocationListener {
-    private static final float MIN_DISTANCE_CHANGE_FOR_UPDATES = 0;
-    private static final long MIN_TIME_BW_UPDATES = 1;
+    private static final float MIN_DISTANCE_CHANGE_FOR_UPDATES = 10;
+    private static final long MIN_TIME_BW_UPDATES = 1000;
     static final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 1;
 
     private final Context mContext;

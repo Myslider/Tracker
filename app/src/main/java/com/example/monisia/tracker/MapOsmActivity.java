@@ -1,6 +1,7 @@
 package com.example.monisia.tracker;
 
 import android.Manifest;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.Sensor;
@@ -27,6 +28,9 @@ import org.osmdroid.views.MapController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.infowindow.BasicInfoWindow;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.web.client.RestTemplate;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,20 +40,17 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
     private static final String TAG = "PG";
     private MapView osm;
     private MapController mc;
-    private List<GeoPoint> list = new ArrayList<>(), list1 = new ArrayList<>();
-    private List<List<GeoPoint>> storeChildrenMovement = new ArrayList<>();
     private List<Person> ListofChildren = new ArrayList<>();
     private SensorManager SM;
     private Sensor mySensor;
     private static int CurrColor = 0;
     private SelectionSpinner multiSelectionSpinner;
-    private CoordinateDto cord, cord1;
-    private CoordinateDto[] coordinateDtos;
     private List<String> select_qualification = new ArrayList<>();
-
+    private String parentId;
     public Handler handler;
     public Thread thread;
     public volatile List<String> SelectedChildren = new ArrayList<>();
+    private ChildDto []  childDto;
 
     private static final int COLOR_CHOICES[] = {
             Color.MAGENTA,
@@ -81,11 +82,11 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_map_osm);
         osm = (MapView) findViewById(R.id.mapView);
-
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("TrackerPref", 0);
+        parentId = String.valueOf(pref.getLong("Id", 0));
         SM = (SensorManager) getSystemService(SENSOR_SERVICE);
         mySensor = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
-        childTestlist();
 
         if (Build.VERSION.SDK_INT >= 23) {
             checkPermissions();
@@ -105,7 +106,8 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
                 listPermissionsNeeded.add(p);
             }
         }
-        if (!listPermissionsNeeded.isEmpty()) {
+        if (listPermissionsNeeded.size()!=0) {
+
             ActivityCompat.requestPermissions(this, listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]), 100);
             return false;
         }
@@ -132,44 +134,6 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
         mc.setZoom(14);
 
         osm.getOverlays().clear();
-    }
-
-    public void childTestlist() {
-        cord = new CoordinateDto();
-        cord.childFirstName = "Jacek";
-        cord.childLastName = "Kuś";
-        cord.id = "1";
-        cord.latitude = "-20.1619";
-        cord.longitude = "-40.2500";
-        cord.time = "12";
-        cord.childId = "1";
-        cord.date = "12345";
-
-        cord1 = new CoordinateDto();
-        cord1.childFirstName = "Jacek";
-        cord1.childLastName = "Kuś";
-        cord1.id = "1";
-        cord1.latitude = "-20.1589";
-        cord1.longitude = "-40.24870";
-        cord1.time = "13";
-        cord1.childId = "1";
-        cord1.date = "123545";
-
-        GeoPoint g1 = new GeoPoint(-20.1618, -40.2490);
-        GeoPoint g2 = new GeoPoint(-20.1690, -40.2495);
-        list.add(g1);
-        list.add(g2);
-        list.add(new GeoPoint(-20.1555, -40.2450));
-
-        GeoPoint center = new GeoPoint(-20.1698, -40.2487);
-        list.add(center);
-
-        list1.add(new GeoPoint(-20.0511, -40.2000));
-        list1.add(new GeoPoint(-19.995, -40.1994));
-        list1.add(new GeoPoint(-19.985, -40.1888));
-
-        storeChildrenMovement.add(list);
-        storeChildrenMovement.add(list1);
     }
 
     public void spinnerMenu() {
@@ -257,30 +221,30 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
         handler = new Handler();
         thread = new Thread() {
             public void run() {
-                coordinateDtos = new CoordinateDto[2];
-                coordinateDtos[0] = cord;
-                coordinateDtos[1] = cord1;
                 try {
                     while (true) {
-                        Person child = new Person();
                         Looper.prepare();
                         sleep(1000);
-                        for (int i = 0; i < coordinateDtos.length; i++) {
-
-                            child.id = Integer.parseInt(coordinateDtos[i].id);
-                            child.FirstName = coordinateDtos[i].childFirstName;
-                            child.LastName = coordinateDtos[i].childLastName;
-
-                            if (child.personGeoPoints.size() != coordinateDtos.length || child.personGeoPoints.isEmpty()) {
-                                child.personGeoPoints.add(new GeoPoint(Double.parseDouble(coordinateDtos[i].latitude), Double.parseDouble(coordinateDtos[i].longitude)));
+                        getChildren();
+                        for (int k = 0; k < childDto.length; k++) {
+                            CoordinateDto[] coordinateDtos = getCoordinates(String.valueOf(childDto[k].id));
+                            Person child = new Person();
+                            child.id = (int)(childDto[k].id);
+                            child.FirstName = childDto[k].FirstName;
+                            child.LastName = childDto[k].LastName;
+                            if (!select_qualification.contains(child.FirstName + " " + child.LastName) || select_qualification.isEmpty())
+                                select_qualification.add(child.FirstName + " " + child.LastName);
+                            child.personGeoPoints.clear();
+                            for (int i = 0; i < coordinateDtos.length; i++) {
+                                //if (child.personGeoPoints.size() != coordinateDtos.length || child.personGeoPoints.isEmpty()) {
+                                    child.personGeoPoints.add(new GeoPoint(Double.parseDouble(coordinateDtos[i].latitude), Double.parseDouble(coordinateDtos[i].longitude)));
+                                //}
                             }
+                            if (!ListofChildren.contains(child.id))
+                                ListofChildren.add(child);
 
-                            if (!select_qualification.contains(coordinateDtos[i].childFirstName + " " + coordinateDtos[i].childLastName) || select_qualification.isEmpty())
-                                select_qualification.add(coordinateDtos[i].childFirstName + " " + coordinateDtos[i].childLastName);
+
                         }
-                        if (!ListofChildren.contains(child.id))
-                            ListofChildren.add(child);
-
                         spinnerMenu();
                         TrackingSelectedChildren();
                         handler.post(this);
@@ -296,18 +260,24 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
 
     public void TrackingSelectedChildren() {
 
+        boolean temp = true;
+        osm.getOverlays().clear();
+        osm.invalidate();
         if (SelectedChildren.size() != 0) {
-            mc.animateTo(ListofChildren.get(0).personGeoPoints.get(ListofChildren.get(0).personGeoPoints.size() - 1));
             for (int i = 0; i < SelectedChildren.size(); i++) {
-                String childName = SelectedChildren.get(i);
-                Person p;
-                p = ListofChildren.get(i);
-                if (childName.equals(p.FirstName + " " + p.LastName)) {
-                    addPolyline(p.personGeoPoints);
-                    addMarker(p.personGeoPoints, SelectedChildren.get(i));
-                } else {
-                    osm.getOverlays().clear();
-                    osm.invalidate();
+                for (int j=0; j < ListofChildren.size();j++)
+                {
+                    if(SelectedChildren.get(i).equals(ListofChildren.get(j).FirstName+ " " + ListofChildren.get(j).LastName))
+                    {
+                        Person p = ListofChildren.get(j);
+                        if (temp) {
+                            mc.animateTo(p.personGeoPoints.get(p.personGeoPoints.size() - 1));
+                            temp = false;
+                        }
+                        addPolyline(p.personGeoPoints);
+                        addMarker(p.personGeoPoints, SelectedChildren.get(i));
+                        break;
+                    }
                 }
             }
         } else {
@@ -330,5 +300,31 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    }
+
+    public void getChildren()
+    {
+        try  {
+            String url = getString(R.string.DBUrl) + "parent/" + parentId;
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
+            childDto = restTemplate.getForObject(url, ChildDto[].class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private CoordinateDto[] getCoordinates(final String childId)
+    {
+        try  {
+            String url = getString(R.string.DBUrl) + "coordinates/child/" + childId;
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
+            CoordinateDto []  coordinateDtos = restTemplate.getForObject(url, CoordinateDto[].class);
+            return coordinateDtos;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
