@@ -49,12 +49,12 @@ public class GPSTracker implements LocationListener {
                 location.setLatitude(0);
                 location.setLongitude(0);
                 this.canGetLocation = false;
-                CoordinatesActivity.isTracking = this.canGetLocation;
+                ChildViewActivity.isTracking = this.canGetLocation;
                 // no network provider is enabled
             }
             else {
                 this.canGetLocation = true;
-                CoordinatesActivity.isTracking = this.canGetLocation;
+                ChildViewActivity.isTracking = this.canGetLocation;
                 if (isGPSEnabled) {
                     this.getLastLocation(LocationManager.GPS_PROVIDER);
                 } else if (isNetworkEnabled) {
@@ -69,7 +69,8 @@ public class GPSTracker implements LocationListener {
     private void getLastLocation(String provider) {
         this.provider = provider;
         if (ContextCompat.checkSelfPermission(
-                this.mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                this.mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
             ActivityCompat.requestPermissions(this.mActivity,
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
         }

@@ -1,9 +1,12 @@
 package com.example.monisia.tracker;
 
+import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -18,14 +21,30 @@ public class ChildViewActivity extends Activity {
     CoordinateDto res;
     public static boolean isTracking = true;
     public TextView textView;
+    public TextView keyView;
+    public TextView childIdView;
+    private String firstName;
+    private String lastName;
+    private Long childId;
+    ImageView trackingImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_child_view);
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("TrackerPref", 0);
+
         lSensor = new LocationSensor(this, this);
+        trackingImage = findViewById(R.id.imageView5);
         textView = findViewById(R.id.textView9);
+        keyView = findViewById(R.id.textView13);
+        childIdView = findViewById(R.id.textView2);
+        keyView.setText(pref.getString("keygen", "unknown"));
+        firstName = pref.getString("FirstName", "unknown");
+        lastName = pref.getString("LastName", "unknown");
+        childId = pref.getLong("childId", 0);
+        childIdView.setText(String.valueOf(childId));
     }
 
     public void onWindowFocusChanged(boolean hasFocus) {
@@ -44,11 +63,46 @@ public class ChildViewActivity extends Activity {
     protected void onResume()
     {
         super.onResume();
+        this.changeTrackingImage();
     }
 
     protected void onPause()
     {
         super.onPause();
+        this.changeTrackingImage();
+    }
+
+    private void changeTrackingImage()
+    {
+        if (isTracking)
+        {
+            //Change tracking image, if to work on older versions
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                trackingImage.setImageDrawable(getResources().getDrawable(R.mipmap.istracking_image, getApplicationContext().getTheme()));
+            } else {
+                trackingImage.setImageDrawable(getResources().getDrawable(R.mipmap.istracking_image));
+            }
+        }
+        else
+        {
+            //Change tracking image, if to work on older versions
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                trackingImage.setImageDrawable(getResources().getDrawable(R.mipmap.nottracking_image, getApplicationContext().getTheme()));
+            } else {
+                trackingImage.setImageDrawable(getResources().getDrawable(R.mipmap.nottracking_image));
+            }
+        }
+    }
+
+    public void setLocation(String lat, String lon) {
+        if(lat == "404" || lat == "foo" || lat== "here")
+        {
+            isTracking=false;
+        }
+        this.changeTrackingImage();
+
+        if (isTracking)
+            this.sendCoordinates(lon, lat);
     }
 
     public void sendCoordinates(final String longitude, final String latitude)
@@ -56,22 +110,17 @@ public class ChildViewActivity extends Activity {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                String url = "http://192.168.1.10:8080/coordinates/save";
+                String url = getString(R.string.DBUrl) + "coordinates/save";
                 RestTemplate restTemplate = new RestTemplate();
                 CoordinateDto postCor = new CoordinateDto();
                 postCor.longitude = longitude;
                 postCor.latitude = latitude;
                 Calendar date = Calendar.getInstance();
-                date.get(Calendar.YEAR);
-                postCor.date = String.format("%d-%s%d-%s%d",
-                        date.get(Calendar.YEAR), date.get(Calendar.MONTH) +1<10 ? 0 : "", date.get(Calendar.MONTH) +1,
-                        date.get(Calendar.DAY_OF_MONTH)<10 ? "0" : "", date.get(Calendar.DAY_OF_MONTH));
-                postCor.time = String.format("%s%d:%s%d",
-                        date.get(Calendar.HOUR_OF_DAY) <10 ? "0" : "", date.get(Calendar.HOUR_OF_DAY),
-                        date.get(Calendar.MINUTE) <10 ? "0" : "", date.get(Calendar.MINUTE));
-                postCor.childFirstName ="Pawel";
-                postCor.childLastName ="Kowalski";
-                postCor.childId ="1";
+                postCor.date = getDate(date);
+                postCor.time = getTime(date);
+                postCor.childFirstName =firstName;
+                postCor.childLastName =lastName;
+                postCor.childId =String.valueOf(childId);
 
                 try {
                     restTemplate.getMessageConverters().add(new MappingJackson2HttpMessageConverter());
@@ -81,6 +130,59 @@ public class ChildViewActivity extends Activity {
                     e.printStackTrace();
                 }
             }});
+
+        thread.start();
+    }
+
+    public String getDate(Calendar date)
+    {
+        return String.format("%d-%s%d-%s%d",
+                date.get(Calendar.YEAR), date.get(Calendar.MONTH) +1<10 ? 0 : "", date.get(Calendar.MONTH) +1,
+                date.get(Calendar.DAY_OF_MONTH)<10 ? "0" : "", date.get(Calendar.DAY_OF_MONTH));
+    }
+
+    public String getTime(Calendar date){
+        return String.format("%s%d:%s%d",
+                date.get(Calendar.HOUR_OF_DAY) <10 ? "0" : "", date.get(Calendar.HOUR_OF_DAY),
+                date.get(Calendar.MINUTE) <10 ? "0" : "", date.get(Calendar.MINUTE));
+    }
+
+    private void getCoordinates()
+    {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try  {
+                    String url = getString(R.string.DBUrl) + "coordinates/child/1";
+                    RestTemplate restTemplate = new RestTemplate();
+                    restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
+                    CoordinateDto []  coordinateDtos = restTemplate.getForObject(url, CoordinateDto[].class);
+                } catch (Exception e) {
+                    result = "failed";
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        thread.start();
+    }
+
+    public void getChildren()
+    {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try  {
+                    String url = getString(R.string.DBUrl) + "parent/1";
+                    RestTemplate restTemplate = new RestTemplate();
+                    restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
+                    ChildDto []  childDto = restTemplate.getForObject(url, ChildDto[].class);
+                } catch (Exception e) {
+                    result = "failed";
+                    e.printStackTrace();
+                }
+            }
+        });
 
         thread.start();
     }

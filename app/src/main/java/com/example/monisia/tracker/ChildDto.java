@@ -7,6 +7,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 
 public class ChildDto {
+
+    public long id;
+
     @JsonProperty("firstName")
     public String FirstName;
 

@@ -13,4 +13,7 @@ public class LoginDto {
     @JsonProperty("password")
     public String Password;
 
+    @JsonProperty("isParent")
+    public Boolean IsParent;
+
 }

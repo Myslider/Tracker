@@ -12,12 +12,11 @@ import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
 public class MainActivity extends AppCompatActivity {
-    Context context;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        context = this;
+        final Context context = this;
         // try login with saved credentials
         final SharedPreferences pref = getApplicationContext().getSharedPreferences("TrackerPref", 0);
         if (pref.getString("username", "") != "")
@@ -25,23 +24,24 @@ public class MainActivity extends AppCompatActivity {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    if (tryLogin(pref.getString("username", ""), pref.getString("password", "")))
+                if (tryLogin(pref.getString("username", ""), pref.getString("password", ""),
+                        pref.getBoolean("isParent", false)))
+                {
+                    if (pref.getBoolean("isParent", false)) {
+                        Intent intent = new Intent(context, MapOsmActivity.class);
+                        startActivity(intent);
+                    }
+                    else
                     {
-                        Intent intent = new Intent(context, CoordinatesActivity.class);
+                        Intent intent = new Intent(context, ChildViewActivity.class);
                         startActivity(intent);
                     }
                 }
+                }
             });
-
             thread.start();
         }
         setContentView(R.layout.activity_main);
-    }
-
-    public void goToLocationView(View view)
-    {
-        Intent intent = new Intent(this, MapOsmActivity.class);
-        startActivity(intent);
     }
 
     public void goToSignInView(View view)
@@ -55,8 +55,6 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, RegisterActivity.class);
         startActivity(intent);
     }
-
-
 
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -81,16 +79,18 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
     }
 
-    private Boolean tryLogin(final String username, final String password)
+    private Boolean tryLogin(final String username, final String password, final Boolean isParent)
     {
         try {
-            String url = "http://192.168.1.10:8080/login/";
+            String url = getString(R.string.DBUrl) + "login/";
             RestTemplate restTemplate = new RestTemplate();
             LoginDto loginDto = new LoginDto();
             loginDto.Username = username;
             loginDto.Password = password;
+            loginDto.IsParent = isParent;
             restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
-            return restTemplate.postForObject(url, loginDto, Boolean.class);
+            LoginDto result = restTemplate.postForObject(url, loginDto, LoginDto.class);
+            return true;
         } catch (Exception e) {
             return false;
         }
