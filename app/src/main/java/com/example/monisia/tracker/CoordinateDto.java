@@ -26,5 +26,4 @@ public class CoordinateDto {
     public String childLastName;
 
     public String childId;
-
 }

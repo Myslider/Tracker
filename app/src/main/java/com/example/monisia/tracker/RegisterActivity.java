@@ -30,6 +30,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import org.springframework.http.HttpStatus;
@@ -39,6 +40,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -60,10 +62,14 @@ public class RegisterActivity extends Activity implements LoaderCallbacks<Cursor
     // UI references.
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
+    private EditText mFirstName;
+    private EditText mLastName;
+    private Spinner spinner;
     private View mProgressView;
     private View mLoginFormView;
     private Context context;
     private SharedPreferences.Editor editor;
+    private Boolean isParent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +83,9 @@ public class RegisterActivity extends Activity implements LoaderCallbacks<Cursor
         populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
+        mFirstName = findViewById(R.id.firstName);
+        mLastName = findViewById(R.id.lastName);
+        spinner = findViewById(R.id.spinner);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -161,6 +170,9 @@ public class RegisterActivity extends Activity implements LoaderCallbacks<Cursor
         // Store values at the time of the login attempt.
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
+        String firstName = mFirstName.getText().toString();
+        String lastName = mLastName.getText().toString();
+        Boolean isParent = spinner.getSelectedItem().toString().equals("Parent");
 
         boolean cancel = false;
         View focusView = null;
@@ -191,7 +203,7 @@ public class RegisterActivity extends Activity implements LoaderCallbacks<Cursor
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             //showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
+            mAuthTask = new UserLoginTask(email, password, firstName, lastName, isParent);
             mAuthTask.execute((Void) null);
         }
     }
@@ -304,35 +316,60 @@ public class RegisterActivity extends Activity implements LoaderCallbacks<Cursor
 
         private final String mEmail;
         private final String mPassword;
+        private final String mFirstName;
+        private final String mLastName;
+        private boolean mIsParent;
 
-        UserLoginTask(String email, String password) {
+        UserLoginTask(String email, String password, String firstName, String lastName, Boolean isParent) {
             mEmail = email;
             mPassword = password;
+            mFirstName = firstName;
+            mLastName = lastName;
+            mIsParent = isParent;
         }
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            LoginDto result;
+            long result = 0l;
             try {
                 String url = "http://192.168.1.10:8080/login/register";
                 RestTemplate restTemplate = new RestTemplate();
-                LoginDto loginDto = new LoginDto();
-                loginDto.Username = mEmail;
-                loginDto.Password = mPassword;
+                UserDto userDto = new UserDto();
+                userDto.username = mEmail;
+                userDto.password = mPassword;
+                userDto.firstName = mFirstName;
+                userDto.lastName = mLastName;
+                userDto.isParent = mIsParent;
                 restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
-                result = restTemplate.postForObject(url, loginDto, LoginDto.class);
-            } catch (HttpServerErrorException ex)
-            {
-                if (ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR)
-                {
+                result = restTemplate.postForObject(url, userDto, long.class);
+                isParent = userDto.isParent;
+                editor.putLong("Id", result);
+                editor.putBoolean("isParent", userDto.isParent);
+                editor.putString("username", userDto.username);
+                editor.putString("password", userDto.password);
+                editor.putString("FirstName", userDto.firstName);
+                editor.putString("LastName", userDto.lastName);
+                if (!mIsParent) {
+                    String keyurl = getString(R.string.DBUrl) + "keygen/save";
+                    KeyGenDto keyGenDto = new KeyGenDto();
+                    keyGenDto.childId = result;
+                    keyGenDto.key = UUID.randomUUID().toString().substring(0, 6);
+                    Long res = restTemplate.postForObject(keyurl, keyGenDto, long.class);
+                    editor.putString("keygen", keyGenDto.key);
+                    editor.putLong("childId", res);
+                }
+                editor.commit();
+
+            } catch (HttpServerErrorException ex) {
+                if (ex.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR) {
                     onPostExecute(false);
                     return true;
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
 
                 return false;
             }
+
             onPostExecute(true);
             return true;
         }
@@ -346,8 +383,15 @@ public class RegisterActivity extends Activity implements LoaderCallbacks<Cursor
                 editor.putString("username", mEmail);
                 editor.putString("password", mPassword);
                 editor.commit();
-                Intent intent = new Intent(context, CoordinatesActivity.class);
-                startActivity(intent);
+                if (isParent) {
+                    Intent intent = new Intent(context, MapOsmActivity.class);
+                    startActivity(intent);
+                }
+                else
+                {
+                    Intent intent = new Intent(context, ChildViewActivity.class);
+                    startActivity(intent);
+                }
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();

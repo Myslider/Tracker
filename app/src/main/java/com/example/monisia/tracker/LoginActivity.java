@@ -31,6 +31,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import org.springframework.http.converter.StringHttpMessageConverter;
@@ -63,6 +64,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mProgressView;
     private View mLoginFormView;
     private SharedPreferences.Editor editor;
+    private Boolean isParent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -325,21 +327,24 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            Boolean result;
+            LoginDto result;
             try {
-                String url = "http://192.168.1.10:8080/login/";
+                String url = getString(R.string.DBUrl) + "login/";
                 RestTemplate restTemplate = new RestTemplate();
                 LoginDto loginDto = new LoginDto();
                 loginDto.Username = mEmail;
                 loginDto.Password = mPassword;
+                loginDto.IsParent = ((Spinner)findViewById(R.id.spinner)).getSelectedItem().toString().equals("Parent");
+
                 restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
-                result = restTemplate.postForObject(url, loginDto, Boolean.class);
+                result = restTemplate.postForObject(url, loginDto, LoginDto.class);
+                isParent = result.IsParent;
             } catch (Exception e) {
                 return false;
             }
-                onPostExecute(result);
+                onPostExecute(true);
 
-            return result;
+            return true;
         }
 
         @Override
@@ -350,9 +355,19 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             if (success) {
                 editor.putString("username", mEmail);
                 editor.putString("password", mPassword);
+                editor.putBoolean("isParent", isParent);
                 editor.commit();
-                Intent intent = new Intent(context, CoordinatesActivity.class);
-                startActivity(intent);
+                if (isParent)
+                {
+                    Intent intent = new Intent(context, MapOsmActivity.class);
+                    startActivity(intent);
+                }
+                else
+                {
+                    Intent intent = new Intent(context, ChildViewActivity.class);
+                    startActivity(intent);
+                }
+
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();

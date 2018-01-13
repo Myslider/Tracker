@@ -41,28 +41,24 @@ public class LocationSensor implements SensorEventListener {
                 != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            if (mContext instanceof CoordinatesActivity)
-                ((CoordinatesActivity) mContext).setLocation("i am", "here");
-            else if (mContext instanceof ChildViewActivity)
+            if (mContext instanceof ChildViewActivity)
             {
                 ((ChildViewActivity) mContext).textView.setText("need location permission");
+                ((ChildViewActivity) mContext).setLocation("i am", "here");
             }
             return;
         }
-        if (mGPS.CanGetLocation() && CoordinatesActivity.isTracking) {
+        if (mGPS.CanGetLocation() && ChildViewActivity.isTracking) {
             mGPS.getLocation();
             if (mContext instanceof ChildViewActivity) {
-                ((ChildViewActivity) mContext).sendCoordinates(String.valueOf(mGPS.getLatitude()), String.valueOf(mGPS.getLongitude()));
+                ((ChildViewActivity) mContext).setLocation(String.valueOf(mGPS.getLatitude()), String.valueOf(mGPS.getLongitude()));
                 ((ChildViewActivity) mContext).textView.setText("You are being TRACKED");
             }
-            else if (mContext instanceof CoordinatesActivity)
-                ((CoordinatesActivity) mContext).setLocation(String.valueOf(mGPS.getLatitude()), String.valueOf(mGPS.getLongitude()));
         } else {
-            if (mContext instanceof CoordinatesActivity)
-                ((CoordinatesActivity) mContext).setLocation("foo", "foo");
-            else if (mContext instanceof ChildViewActivity)
+            if (mContext instanceof ChildViewActivity)
             {
                 ((ChildViewActivity) mContext).textView.setText("can't get location");
+                ((ChildViewActivity) mContext).setLocation(String.valueOf(mGPS.getLatitude()), String.valueOf(mGPS.getLongitude()));
             }
         }
     }

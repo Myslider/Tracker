@@ -63,6 +63,17 @@
 
             </android.support.design.widget.TextInputLayout>
 
+            <Spinner
+                android:id="@+id/spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true"
+                android:dropDownWidth="match_parent"
+                android:entries="@array/mode_array"
+                android:spinnerMode="dropdown">
+
+            </Spinner>
+
             <Button
                 android:id="@+id/email_sign_in_button"
                 style="?android:textAppearanceSmall"
