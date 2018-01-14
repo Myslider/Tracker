@@ -55,10 +55,8 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
     private static final int COLOR_CHOICES[] = {
             Color.MAGENTA,
             Color.RED,
-            Color.YELLOW,
             Color.BLUE,
             Color.CYAN,
-            Color.GREEN,
             Color.BLACK
     };
 

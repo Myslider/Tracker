@@ -50,7 +50,7 @@ public class LocationSensor implements SensorEventListener {
             return;
         }
 
-        if (sensorTime < 100)
+        if (sensorTime < 1500)
         {
             sensorTime++;
             return;
@@ -60,8 +60,8 @@ public class LocationSensor implements SensorEventListener {
         if (mGPS.CanGetLocation()) {
             mGPS.getLocation();
             if (mContext instanceof ChildViewActivity) {
-                ((ChildViewActivity) mContext).setLocation(String.valueOf(mGPS.getLatitude()), String.valueOf(mGPS.getLongitude()));
                 ((ChildViewActivity) mContext).textView.setText("You are being TRACKED");
+                ((ChildViewActivity) mContext).setLocation(String.valueOf(mGPS.getLatitude()), String.valueOf(mGPS.getLongitude()));
             }
         } else {
             if (mContext instanceof ChildViewActivity)

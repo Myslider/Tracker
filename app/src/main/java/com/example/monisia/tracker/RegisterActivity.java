@@ -332,7 +332,7 @@ public class RegisterActivity extends Activity implements LoaderCallbacks<Cursor
         protected Boolean doInBackground(Void... params) {
             long result = 0l;
             try {
-                String url = "http://192.168.1.10:8080/login/register";
+                String url = "\"https://aso-web.herokuapp.com/login/register";
                 RestTemplate restTemplate = new RestTemplate();
                 UserDto userDto = new UserDto();
                 userDto.username = mEmail;
