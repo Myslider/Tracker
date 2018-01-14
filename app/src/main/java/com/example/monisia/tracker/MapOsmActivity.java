@@ -1,6 +1,7 @@
 package com.example.monisia.tracker;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -13,12 +14,16 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import org.osmdroid.views.overlay.Marker;
@@ -49,6 +54,7 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
     private String parentId;
     public Handler handler;
     public Thread thread;
+    private Button addButton;
     public volatile List<String> SelectedChildren = new ArrayList<>();
     private ChildDto []  childDto;
 
@@ -85,6 +91,7 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
         SM = (SensorManager) getSystemService(SENSOR_SERVICE);
         mySensor = SM.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         SM.registerListener(this, mySensor, SensorManager.SENSOR_DELAY_NORMAL);
+        addButton = (Button)findViewById(R.id.addChild);
 
         if (Build.VERSION.SDK_INT >= 23) {
             checkPermissions();
@@ -92,7 +99,47 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
         mapOSM();
         multiSelectionSpinner = (SelectionSpinner) findViewById(R.id.spinner1);
         multiSelectionSpinner.setListener(this);
+
+        addButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AddClick();
+            }
+        });
+
         childFromDB();
+    }
+
+    public boolean AddClick() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MapOsmActivity.this);
+        builder.setTitle("Please provide child key");
+        final EditText input = new EditText(MapOsmActivity.this);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT);
+        input.setLayoutParams(lp);
+        builder.setView(input); // uncomment this line
+
+        builder.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                try {
+                    String url = getString(R.string.DBUrl) + "keygen/addChild/" + input.getText().toString() + "/" + parentId;
+                    RestTemplate restTemplate = new RestTemplate();
+                    restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
+                    restTemplate.postForObject(url, null, null);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+        builder.show();
+        return true;
     }
 
     public boolean checkPermissions() {
