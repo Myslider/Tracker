@@ -123,14 +123,20 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
         builder.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                try {
-                    String url = getString(R.string.DBUrl) + "keygen/addChild/" + input.getText().toString() + "/" + parentId;
-                    RestTemplate restTemplate = new RestTemplate();
-                    restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
-                    restTemplate.postForObject(url, null, null);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            String url = getString(R.string.DBUrl) + "keygen/addChild/" + input.getText().toString() + "/" + parentId;
+                            RestTemplate restTemplate = new RestTemplate();
+                            restTemplate.getMessageConverters().add(new StringHttpMessageConverter());
+                            restTemplate.postForLocation(url, null);
+                            getChildren();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }});
+                thread.start();
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -277,18 +283,14 @@ public class MapOsmActivity extends AppCompatActivity implements SensorEventList
                             child.id = (int)(childDto[k].id);
                             child.FirstName = childDto[k].FirstName;
                             child.LastName = childDto[k].LastName;
-                            if (!select_qualification.contains(child.FirstName + " " + child.LastName) || select_qualification.isEmpty())
+                            if (!select_qualification.contains(child.FirstName + " " + child.LastName))
                                 select_qualification.add(child.FirstName + " " + child.LastName);
                             child.personGeoPoints.clear();
                             for (int i = 0; i < coordinateDtos.length; i++) {
-                                //if (child.personGeoPoints.size() != coordinateDtos.length || child.personGeoPoints.isEmpty()) {
                                     child.personGeoPoints.add(new GeoPoint(Double.parseDouble(coordinateDtos[i].latitude), Double.parseDouble(coordinateDtos[i].longitude)));
-                                //}
                             }
                             if (!ListofChildren.contains(child.id))
                                 ListofChildren.add(child);
-
-
                         }
                         spinnerMenu();
                         TrackingSelectedChildren();
